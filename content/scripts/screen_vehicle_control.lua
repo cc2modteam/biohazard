@@ -1511,6 +1511,7 @@ function update(screen_w, screen_h, ticks)
         end
 
         -- render vehicles to the map
+        bio_update_virusbots()
 
         if is_placing_turret == false then
             local vehicle_count = update_get_map_vehicle_count()
@@ -1791,6 +1792,13 @@ function update(screen_w, screen_h, ticks)
                 
                                 local element_color = get_vehicle_team_color(vehicle_team)
                                 local is_highlight = false
+
+                                if g_animation_time % 20 < 10 then
+                                    if bio_near_virusbot(vehicle) then
+                                        element_color = color_friendly
+                                    end
+                                end
+
 
                                 if g_selection.vehicle_id == vehicle:get_id() then
                                     element_color = color8(255, 255, 255, 255)
@@ -2398,9 +2406,11 @@ function update_interaction_ui()
             local highlighted_vehicle = update_get_map_vehicle_by_id(g_highlighted.vehicle_id)
 
             if highlighted_vehicle:get() then
+                bio_update_virusbots()
+
                 local vehicle_definition_index = highlighted_vehicle:get_definition_index()
 
-                if highlighted_vehicle:get_team() == update_get_screen_team_id() then
+                if bio_near_virusbot(highlighted_vehicle) or highlighted_vehicle:get_team() == update_get_screen_team_id() then
                     if vehicle_definition_index == e_game_object_type.chassis_carrier then
                         update_add_ui_interaction(update_get_loc(e_loc.interaction_carrier), e_game_input.interact_a)
                     else
@@ -3015,8 +3025,10 @@ function get_is_vehicle_enterable(vehicle)
         local team = vehicle:get_team()
         local def = vehicle:get_definition_index()
 
-        if team == update_get_screen_team_id() and def ~= e_game_object_type.chassis_carrier and def ~= e_game_object_type.chassis_land_robot_dog then
-            return true
+        if def ~= e_game_object_type.chassis_carrier and def ~= e_game_object_type.chassis_land_robot_dog then
+            if bio_near_virusbot(vehicle) or team == update_get_screen_team_id() then
+                return true
+            end
         end
     end
 
@@ -3241,4 +3253,49 @@ function get_is_vehicle_waypoint_available(vehicle)
     end
 
     return true
+end
+
+g_bio_team_bots = {}
+
+function bio_update_virusbots()
+    -- find all the virus bots belonging to our team
+    g_bio_team_bots = {}
+    local our_team = update_get_screen_team_id()
+    local vehicle_count = update_get_map_vehicle_count()
+
+    for i = 0, vehicle_count - 1 do
+        local vehicle = update_get_map_vehicle_by_index(i)
+        if vehicle:get() then
+            if vehicle:get_team() == our_team then
+                local vdef = vehicle:get_definition_index()
+                if vdef == e_game_object_type.chassis_land_robot_dog then
+                    table.insert(g_bio_team_bots, vehicle:get_position_xz())
+                end
+            end
+        end
+    end
+end
+
+
+function bio_near_virusbot(vehicle)
+    if not get_is_vehicle_waypoint_available(vehicle) then
+        return false
+    end
+
+    if vehicle:get() then
+        local current_team_id = update_get_screen_team_id()
+        if vehicle:get_team() ~= current_team_id then
+            -- return True if this unit is within 500m of a bot position
+            local vpos = vehicle:get_position_xz()
+            for i = 1, #g_bio_team_bots do
+                local bot_pos = g_bio_team_bots[i]
+                local dist = vec2_dist(vpos, bot_pos)
+                if dist < 250 then
+                    return true
+                end
+            end
+        end
+    end
+
+    return false
 end

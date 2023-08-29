@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<data name="Biohzard" author="Bredroll, QuantX" description="
+
+Drazu Industries Corp has provided an in-field upgrade to the Boston-Robotics virus bot system.
+
+The upgraded virus bots now have extended capabilities that take advantage of recently discovered
+remote code execution vulnerabilities found in the malicious Stanza code that has lead to the current
+crisis. Using this new found weakness, the virus bot can now act as a hacked command relay, allowing
+you to take control of hostile forces close to the virus bot.
+
+Virus bots, once deployed now allow operators to take manual control of hostile units such as turrets,
+bears, seals and walrus within a 250m radius of a bot.
+
+"/>
