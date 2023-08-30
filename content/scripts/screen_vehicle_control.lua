@@ -368,7 +368,8 @@ function render_selection_vehicle(screen_w, screen_h, vehicle)
     update_add_ui_interaction_special(update_get_loc(e_loc.interaction_navigate), e_ui_interaction_special.gamepad_dpad_ud)
 
     if screen_vehicle:get() then
-        if screen_vehicle:get_team() == vehicle:get_team() then
+        local near_bot = bio_near_virusbot(vehicle)
+        if screen_vehicle:get_team() == vehicle:get_team() or near_bot then
             local ui = g_ui
             
             local loadout_w = 74
@@ -423,9 +424,10 @@ function render_selection_vehicle(screen_w, screen_h, vehicle)
                 
                 local dock_state = vehicle:get_dock_state()
                 local is_self_destruct = dock_state == e_vehicle_dock_state.undocked or dock_state == e_vehicle_dock_state.dock_queue or dock_state == e_vehicle_dock_state.docking
-
-                if ui:list_item(update_get_loc(e_loc.upp_self_destruct), true, update_get_peer_is_admin(0) and is_self_destruct) then
-                    g_selected_vehicle_ui.confirm_self_destruct = true
+                if screen_vehicle:get_team() == vehicle:get_team() then
+                    if ui:list_item(update_get_loc(e_loc.upp_self_destruct), true, update_get_peer_is_admin(0)) and is_self_destruct then
+                        g_selected_vehicle_ui.confirm_self_destruct = true
+                    end
                 end
             ui:end_window()
             
@@ -928,7 +930,7 @@ function render_selection(screen_w, screen_h)
         
             if vehicle_definition_index == 0 then -- carrier
                 render_selection_carrier(screen_w, screen_h, selected_vehicle)
-            elseif selected_vehicle:get_team() == update_get_screen_team_id() then
+            elseif selected_vehicle:get_team() == update_get_screen_team_id() or bio_near_virusbot(selected_vehicle) then
                 render_selection_vehicle(screen_w, screen_h, selected_vehicle)
             end
         else
@@ -2519,7 +2521,8 @@ function input_event(event, action)
                     elseif g_highlighted.vehicle_id > 0 and g_highlighted.waypoint_id == 0 then
                         local highlighted_vehicle = update_get_map_vehicle_by_id(g_highlighted.vehicle_id)
 
-                        if highlighted_vehicle:get() and highlighted_vehicle:get_team() == update_get_screen_team_id() then
+                        if highlighted_vehicle:get() and (
+                                (highlighted_vehicle:get_team() == update_get_screen_team_id()) or bio_near_virusbot(highlighted_vehicle)) then
                             g_drag:set_vehicle(g_highlighted.vehicle_id)
                         end
                     elseif g_highlighted.vehicle_id > 0 and g_highlighted.waypoint_id > 0 then
@@ -2621,7 +2624,7 @@ function input_event(event, action)
                                         local highlighted_vehicle_team = highlighted_vehicle:get_team()
                                         local highlighted_vehicle_definition = highlighted_vehicle:get_definition_index()
 
-                                        if highlighted_vehicle_team == update_get_screen_team_id() then
+                                        if highlighted_vehicle_team == update_get_screen_team_id() or bio_near_virusbot(highlighted_vehicle) then
                                             if g_drag.waypoint_id > 0 and vehicle_definition_index == e_game_object_type.chassis_air_rotor_heavy and get_is_vehicle_airliftable(highlighted_vehicle_definition) then
                                                 -- toggle an "attack" target to perform airlift operation on friendly vehicle
 
