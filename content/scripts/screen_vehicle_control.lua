@@ -429,17 +429,23 @@ function render_selection_vehicle(screen_w, screen_h, vehicle)
                         g_selected_vehicle_ui.confirm_self_destruct = true
                     end
                 end
+            if near_bot then
+                ui:list_item("HACKED CONTROL", false, false)
+            end
             ui:end_window()
             
             local attachment_count = vehicle:get_attachment_count()
             local attachments = {}
 
-            for i = 0, attachment_count - 1, 1 do
-                local attachment = vehicle:get_attachment(i)
+            if not near_bot then
+                for i = 0, attachment_count - 1, 1 do
+                    local attachment = vehicle:get_attachment(i)
 
-                if attachment:get() and (attachment:get_ammo_capacity() > 0 or attachment:get_fuel_capacity() > 0) then
-                    table.insert(attachments, attachment)
+                    if attachment:get() and (attachment:get_ammo_capacity() > 0 or attachment:get_fuel_capacity() > 0) then
+                        table.insert(attachments, attachment)
+                    end
                 end
+
             end
 
             if #attachments > 0 and vehicle:get_definition_index() ~= e_game_object_type.chassis_land_turret then
